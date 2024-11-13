@@ -78,7 +78,7 @@ const Home = () => {
                             </ScrollView>
                             <Text style={styles.textoLista}>Código de vuelo: {vuelo.codigoVuelo}</Text>
                             <Text style={styles.textoLista}>Precio: {vuelo.precio ? vuelo.precio.toLocaleString() : 'Precio no disponible'}</Text>
-                            <Text style={styles.textoLista}>Duración: {vuelo.duracion}</Text>
+                            <Text style={styles.textoLista}>Duración de Vuelo "minutos": {vuelo.duracion}</Text>
                             <Button
                                 style={styles.botonStyle}
                                 icon={<Icon name="send" color="#fff" />}
