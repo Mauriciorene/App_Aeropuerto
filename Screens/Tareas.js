@@ -9,28 +9,30 @@ export default function Tareas() {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity 
-                style={styles.box} 
-                onPress={() => navigation.navigate('RegistrarVuelos')}
-            >
-                <FontAwesome name="plane" size={40} color="green" />
-                <Text style={styles.text}>Registrar</Text>
-            </TouchableOpacity>
+            <View style={styles.row}>
+                <TouchableOpacity 
+                    style={styles.box} 
+                    onPress={() => navigation.navigate('RegistrarVuelos')}
+                >
+                    <FontAwesome name="plane" size={40} color="green" />
+                    <Text style={styles.text}>Registrar</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-                style={styles.box} 
-                onPress={() => navigation.navigate('EditarRegistros')}
-            >
-                <FontAwesome name="edit" size={40} color="green" />
-                <Text style={styles.text}>Editar</Text>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                    style={styles.box} 
+                    onPress={() => navigation.navigate('EditarRegistros')}
+                >
+                    <FontAwesome name="edit" size={40} color="green" />
+                    <Text style={styles.text}>Editar</Text>
+                </TouchableOpacity>
+            </View>
 
             <TouchableOpacity 
                 style={styles.box} 
                 onPress={() => navigation.navigate('Estadisticas')}
             >
                 <AntDesign name="areachart" size={40} color="green" />
-                <Text style={styles.text}>Estadisticas</Text>
+                <Text style={styles.text}>Estadísticas</Text>
             </TouchableOpacity>
         </View>
     );
@@ -38,11 +40,16 @@ export default function Tareas() {
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
+    },
+    row: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        alignItems: 'center',
-        flex: 1,
-        backgroundColor: 'white',
+        width: '100%',
+        marginBottom: 20,
     },
     box: {
         width: 120,
@@ -53,6 +60,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 10,
+        marginHorizontal: 10,
     },
     text: {
         marginTop: 10,
