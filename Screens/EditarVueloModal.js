@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Button, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Button, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Icon } from '@rneui/themed';
 import { doc, updateDoc } from "firebase/firestore"; 
 import { getFirestore } from 'firebase/firestore';
@@ -15,6 +15,12 @@ const EditarVueloModal = ({ vuelo, cerrarModal }) => {
     const [imagenes, setImagenes] = useState(vuelo.imagenes);
 
     const actualizarVuelo = async () => {
+        // Validación de campos
+        if (!descripcion.trim() || !codigoVuelo.trim() || !precio || !duracion || imagenes.length === 0) {
+            Alert.alert('Error', 'Por favor, complete todos los campos antes de guardar.');
+            return;
+        }
+        
         const vueloRef = doc(db, "Vuelos", vuelo.id);
         await updateDoc(vueloRef, {
             nombreVuelo: descripcion,
@@ -61,17 +67,17 @@ const EditarVueloModal = ({ vuelo, cerrarModal }) => {
             <Text style={styles.label}>Precio Por Persona</Text>
             <TextInput
                 style={styles.input}
-                value={precio}
+                value={precio ? precio.toString() : ''}
                 keyboardType="numeric"
-                onChangeText={(text) => setPrecio(parseFloat(text))}
+                onChangeText={(text) => setPrecio(parseFloat(text) || '')}
             />
 
             <Text style={styles.label}>Duración (minutos)</Text>
             <TextInput
                 style={styles.input}
-                value={duracion}
+                value={duracion ? duracion.toString() : ''}
                 keyboardType="numeric"
-                onChangeText={(text) => setDuracion(parseFloat(text))}
+                onChangeText={(text) => setDuracion(parseFloat(text) || '')}
             />
 
             <Text style={styles.label}>Imágenes</Text>
