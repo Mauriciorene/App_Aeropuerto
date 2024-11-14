@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, FlatList, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { db } from '../database/firebaseconfig';
 import { collection, addDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
+import { Icon } from '@rneui/themed'; // Para agregar el ícono de la "X" de eliminar
 
 export default function RegistrarVuelos() {
   const [nombreVuelo, setNombreVuelo] = useState('');
@@ -13,6 +14,12 @@ export default function RegistrarVuelos() {
   const [cargando, setCargando] = useState(false);
 
   const handleRegistroVuelo = async () => {
+    // Validación de campos
+    if (!nombreVuelo || !codigoVuelo || !precio || !duracion || imagenes.length === 0) {
+      Alert.alert('Error', 'Por favor, complete todos los campos antes de registrar el vuelo');
+      return;
+    }
+
     try {
       setCargando(true);
       
@@ -55,6 +62,11 @@ export default function RegistrarVuelos() {
     }
   };
 
+  // Función para eliminar una imagen de la lista
+  const eliminarImagen = (index) => {
+    setImagenes(imagenes.filter((_, i) => i !== index));
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollViewContent}>
       <Text style={styles.title}>Registrar Vuelo</Text>
@@ -94,8 +106,13 @@ export default function RegistrarVuelos() {
       <FlatList
         data={imagenes}
         keyExtractor={(item) => item.uri}
-        renderItem={({ item }) => (
-          <Image source={{ uri: item.uri }} style={styles.image} />
+        renderItem={({ item, index }) => (
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: item.uri }} style={styles.image} />
+            <TouchableOpacity onPress={() => eliminarImagen(index)} style={styles.deleteIcon}>
+              <Icon name="close" size={20} color="red" />
+            </TouchableOpacity>
+          </View>
         )}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -130,10 +147,23 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 5,
   },
+  imageContainer: {
+    position: 'relative',
+    marginRight: 10,
+  },
   image: {
     width: 100,
     height: 100,
     margin: 5,
+    borderRadius: 10,
+  },
+  deleteIcon: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 15,
+    padding: 2,
   },
   buttonContainer: {
     marginVertical: 20,

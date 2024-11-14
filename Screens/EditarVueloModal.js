@@ -29,7 +29,14 @@ const EditarVueloModal = ({ vuelo, cerrarModal }) => {
             duracion,
             imagenes
         });
-        cerrarModal();
+
+        // Mostrar alerta después de actualizar
+        Alert.alert('Éxito', 'Registro actualizado con éxito', [
+            {
+                text: 'OK',
+                onPress: () => cerrarModal(),
+            },
+        ]);
     };
 
     const seleccionarImagen = async () => {
