@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Button, SafeAreaView, Alert } from 'react-native';
 import { PieChart, BarChart } from 'react-native-chart-kit';
 import { db } from '../database/firebaseconfig';
 import { collection, getDocs } from 'firebase/firestore';
 import * as Sharing from 'expo-sharing';
-import * as Print from 'expo-print';
+import * as FileSystem from 'expo-file-system';
+import { captureRef } from 'react-native-view-shot';
+import { jsPDF } from 'jspdf';
 
 const Estadisticas = () => {
   const [vuelos, setVuelos] = useState([]);
+  const barChartContainerRef = useRef(); // Referencia al contenedor del gráfico de barras
+  const pieChartContainerRef = useRef(); // Referencia al contenedor del gráfico de pastel
 
   // Función para obtener los vuelos desde Firebase
   const obtenerVuelos = async () => {
@@ -38,18 +42,18 @@ const Estadisticas = () => {
 
   const pieChartData = [
     {
-      name: `Vuelos Caros  (${porcentajeVuelosCaros.toFixed(2)}%)`,
+      name: `  Menos accesibles    (${porcentajeVuelosCaros.toFixed(2)}%)`,
       population: porcentajeVuelosCaros,
       color: '#FF5733',
       legendFontColor: '#000',
       legendFontSize: 11,
     },
     {
-      name: `Vuelos Baratos (${porcentajeVuelosBaratos.toFixed(2)}%)`,
+      name: `     Accesibles            (${porcentajeVuelosBaratos.toFixed(2)}%)`,
       population: porcentajeVuelosBaratos,
       color: '#33FF57',
       legendFontColor: '#000',
-      legendFontSize: 10,
+      legendFontSize: 11,
     },
   ];
 
@@ -64,37 +68,56 @@ const Estadisticas = () => {
     ],
   };
 
-  const generarPDF = async (titulo, contenido) => {
+  // Función para generar y compartir el PDF de un gráfico
+  const generarPDF = async (chartRef, titulo, datos) => {
     try {
-      const contenidoHTML = `
-        <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              h1 { text-align: center; color: #333; }
-              ul { padding: 0; list-style: none; }
-              li { margin-bottom: 10px; }
-            </style>
-          </head>
-          <body>
-            <h1>${titulo}</h1>
-            <ul>
-              ${contenido.map(
-                (item, index) =>
-                  `<li>${index + 1}. ${item}</li>`
-              ).join('')}
-            </ul>
-          </body>
-        </html>
-      `;
-      const { uri } = await Print.printToFileAsync({ html: contenidoHTML });
+      if (!chartRef) {
+        Alert.alert('Error', 'Referencia al gráfico no encontrada.');
+        return;
+      }
+
+      // Capturar el gráfico como imagen
+      const uri = await captureRef(chartRef, {
+        format: 'png',
+        quality: 1,
+      });
+
+      // Crear una instancia de jsPDF
+      const doc = new jsPDF();
+      doc.text(titulo, 10, 10);
+
+      // Leer la imagen capturada y agregarla al PDF
+      const chartImage = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      doc.addImage(`data:image/png;base64,${chartImage}`, 'PNG', 10, 20, 180, 140); // Ancho: 180, Alto: 100
+
+      // Agregar una tabla con los datos
+      let startY = 170; // espacio entre la imagen y el listado en el pdf
+      doc.text('Datos del Gráfico:', 10, startY);
+
+      datos.forEach((dato, index) => {
+        startY += 10;
+        doc.text(`${index + 1}. ${dato.nombre}: ${dato.valor}`, 10, startY);
+      });
+
+      // Guardar el archivo PDF
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+      const fileUri = `${FileSystem.documentDirectory}${titulo.replace(/\s+/g, '_')}.pdf`;
+
+      await FileSystem.writeAsStringAsync(fileUri, pdfBase64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Compartir el archivo PDF
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
+        await Sharing.shareAsync(fileUri);
       } else {
-        alert('La funcionalidad de compartir no está disponible en este dispositivo.');
+        Alert.alert('Error', 'La funcionalidad de compartir no está disponible en este dispositivo.');
       }
     } catch (error) {
-      console.error('Error al generar el PDF:', error);
+      console.error('Error al generar o compartir el PDF:', error);
+      Alert.alert('Error', 'No se pudo generar o compartir el PDF.');
     }
   };
 
@@ -104,11 +127,11 @@ const Estadisticas = () => {
         <Text style={styles.title}>Estadísticas de Vuelos</Text>
 
         {/* Gráfico de Barras */}
-        <View style={styles.chartCard}>
+        <View ref={barChartContainerRef} style={styles.chartCard}>
           <Text style={styles.chartTitle}>Comparación de Precios</Text>
           <BarChart
             data={barChartData}
-            width={300}
+            width={310}
             height={220}
             chartConfig={{
               backgroundColor: '#ffffff',
@@ -121,23 +144,27 @@ const Estadisticas = () => {
             fromZero={true}
             style={styles.chart}
           />
+        </View>
+
+        <View ref={barChartContainerRef} style={[styles.chartCard, { width: 270 }]}>
           <Button
-            title="Generar y Compartir el PDF"
+            title="Generar y compartir PDF"
             onPress={() =>
               generarPDF(
+                barChartContainerRef.current,
                 'Comparación de Precios',
-                vuelos.map(vuelo => `${vuelo.nombreVuelo} - $${vuelo.precio}`)
+                vuelos.map(vuelo => ({ nombre: vuelo.nombreVuelo, valor: vuelo.precio }))
               )
             }
           />
         </View>
 
         {/* Gráfico de Pastel */}
-        <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Distribución de los Precios</Text>
+        <View ref={pieChartContainerRef} style={styles.chartCard}>
+          <Text style={styles.chartTitle}>Distribución de los Precios de los Vuelos por Persona</Text>
           <PieChart
             data={pieChartData}
-            width={300}
+            width={370}
             height={220}
             chartConfig={{
               backgroundColor: '#ffffff',
@@ -148,18 +175,26 @@ const Estadisticas = () => {
             }}
             accessor="population"
             backgroundColor="transparent"
-            paddingLeft="15"
+            paddingLeft="10"
           />
-          <Button
-            title="Generar y Compartir el PDF"
+        </View>
+
+        <View ref={barChartContainerRef} style={[styles.chartCard, { width: 270 }]}>
+        <Button
+            title="Generar y compartir PDF"
             onPress={() =>
-              generarPDF('Distribución de Vuelos', [
-                `Vuelos Caros: ${vuelosCaros} (${porcentajeVuelosCaros.toFixed(2)}%)`,
-                `Vuelos Baratos: ${vuelosBaratos} (${porcentajeVuelosBaratos.toFixed(2)}%)`,
-              ])
+              generarPDF(
+                pieChartContainerRef.current,
+                'Distribución de Precios',
+                [
+                  { nombre: 'Menos accesibles', valor: `${porcentajeVuelosCaros.toFixed(2)}%` },
+                  { nombre: 'Accesibles', valor: `${porcentajeVuelosBaratos.toFixed(2)}%` },
+                ]
+              )
             }
           />
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
