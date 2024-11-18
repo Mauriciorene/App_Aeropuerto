@@ -9,14 +9,13 @@ import { appFirebase } from '../database/firebaseconfig.js';
 const EditarVueloModal = ({ vuelo, cerrarModal }) => {
     const db = getFirestore(appFirebase);
     const [descripcion, setDescripcion] = useState(vuelo.descripcion);
-    const [codigoVuelo, setCodigoVuelo] = useState(vuelo.codigoVuelo);
     const [precio, setPrecio] = useState(vuelo.precio);
     const [duracion, setDuracion] = useState(vuelo.duracion);
     const [imagenes, setImagenes] = useState(vuelo.imagenes);
 
     const actualizarVuelo = async () => {
         // Validación de campos
-        if (!descripcion.trim() || !codigoVuelo.trim() || !precio || !duracion || imagenes.length === 0) {
+        if (!descripcion.trim() || !precio || !duracion || imagenes.length === 0) {
             Alert.alert('Error', 'Por favor, complete todos los campos antes de guardar.');
             return;
         }
@@ -24,7 +23,6 @@ const EditarVueloModal = ({ vuelo, cerrarModal }) => {
         const vueloRef = doc(db, "Vuelos", vuelo.id);
         await updateDoc(vueloRef, {
             nombreVuelo: descripcion,
-            codigoVuelo,
             precio,
             duracion,
             imagenes
@@ -62,13 +60,6 @@ const EditarVueloModal = ({ vuelo, cerrarModal }) => {
                 style={styles.input}
                 value={descripcion}
                 onChangeText={setDescripcion}
-            />
-
-            <Text style={styles.label}>Código de Vuelo</Text>
-            <TextInput
-                style={styles.input}
-                value={codigoVuelo}
-                onChangeText={setCodigoVuelo}
             />
 
             <Text style={styles.label}>Precio Por Persona</Text>
