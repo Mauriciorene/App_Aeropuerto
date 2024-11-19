@@ -125,7 +125,7 @@ const Estadisticas = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <Text style={styles.title}>Estadísticas de Vuelos</Text>
-
+  
         {/* Gráfico de Barras */}
         <View ref={barChartContainerRef} style={styles.chartCard}>
           <Text style={styles.chartTitle}>Comparación de Precios</Text>
@@ -145,8 +145,8 @@ const Estadisticas = () => {
             style={styles.chart}
           />
         </View>
-
-        <View ref={barChartContainerRef} style={[styles.chartCard, { width: 270 }]}>
+  
+        <View style={[styles.chartCard, { width: 270 }]}>
           <Button
             title="Generar y compartir PDF"
             onPress={() =>
@@ -158,7 +158,7 @@ const Estadisticas = () => {
             }
           />
         </View>
-
+  
         {/* Gráfico de Pastel */}
         <View ref={pieChartContainerRef} style={styles.chartCard}>
           <Text style={styles.chartTitle}>Distribución de los Precios de los Vuelos por Persona</Text>
@@ -178,9 +178,9 @@ const Estadisticas = () => {
             paddingLeft="10"
           />
         </View>
-
-        <View ref={barChartContainerRef} style={[styles.chartCard, { width: 270 }]}>
-        <Button
+  
+        <View style={[styles.chartCard, { width: 270 }]}>
+          <Button
             title="Generar y compartir PDF"
             onPress={() =>
               generarPDF(
@@ -194,10 +194,10 @@ const Estadisticas = () => {
             }
           />
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
+  
 };
 
 const styles = StyleSheet.create({
